@@ -6,6 +6,7 @@
     <title>Flashcard Maker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
     <style>
         body {
             background: linear-gradient(to bottom, rgb(88, 28, 135), rgb(15, 23, 42));
@@ -71,13 +72,22 @@
                     class="w-full h-48 p-4 rounded-xl bg-white/10 border border-white/20 text-white font-mono text-sm"
                     readonly
                 ></textarea>
-                <button 
-                    onclick="copyToClipboard()" 
-                    class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors flex items-center justify-center gap-2"
-                >
-                    <i data-lucide="copy" class="w-5 h-5"></i>
-                    Copy to Clipboard
-                </button>
+                <div class="flex gap-2">
+                    <button 
+                        onclick="copyToClipboard()" 
+                        class="flex-1 py-3 px-4 bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors flex items-center justify-center gap-2"
+                    >
+                        <i data-lucide="copy" class="w-5 h-5"></i>
+                        Copy to Clipboard
+                    </button>
+                    <button 
+                        onclick="loadInApp()" 
+                        class="flex-1 py-3 px-4 bg-purple-600 hover:bg-purple-700 rounded-xl transition-colors flex items-center justify-center gap-2"
+                    >
+                        <i data-lucide="external-link" class="w-5 h-5"></i>
+                        Load in App
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -168,6 +178,12 @@
                 button.innerHTML = originalText;
                 lucide.createIcons(); // Reinitialize icons after reverting
             }, 2000);
+        }
+
+        function loadInApp() {
+            const flashcardSet = JSON.parse(document.getElementById('jsonOutput').value);
+            const compressed = LZString.compressToEncodedURIComponent(JSON.stringify(flashcardSet));
+            window.location.href = `./index.html?s=${compressed}`;
         }
 
         // Add first card automatically
