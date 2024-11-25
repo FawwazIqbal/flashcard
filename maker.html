@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcard Maker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom, rgb(88, 28, 135), rgb(15, 23, 42));
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        /* Optional: Add some subtle animation to input focus */
+        input:focus, textarea:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.4);
+        }
+    </style>
+</head>
+<body class="text-white min-h-screen p-4 md:p-8">
+    <div class="container mx-auto">
+        <div class="text-right mb-4">
+            <p class="text-purple-200 text-sm">Made by Fawwaz</p>
+        </div>
+
+        <div class="text-center mb-12">
+            <div class="relative mb-4">
+                <div class="flex items-center gap-3 justify-center">
+                    <i data-lucide="brain" class="w-12 h-12 text-violet-400"></i>
+                    <i data-lucide="book-open" class="w-12 h-12 text-purple-400"></i>
+                </div>
+            </div>
+            <h1 class="text-4xl font-bold text-white mb-2">Flashcard Maker</h1>
+            <p class="text-lg text-purple-200">Create your flashcard set easily</p>
+        </div>
+
+        <div class="max-w-2xl mx-auto mb-12">
+            <input 
+                type="text" 
+                id="setName" 
+                placeholder="Enter set name"
+                class="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-white mb-4"
+            >
+            <div id="cardContainer" class="space-y-4 mb-4">
+                <!-- Cards will be added here -->
+            </div>
+
+            <div class="flex gap-4 mb-8">
+                <button 
+                    onclick="addCard()" 
+                    class="flex-1 py-3 px-4 bg-purple-600 hover:bg-purple-700 rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                    <i data-lucide="plus" class="w-5 h-5"></i>
+                    Add Card
+                </button>
+                <button 
+                    onclick="generateJSON()" 
+                    class="flex-1 py-3 px-4 bg-green-600 hover:bg-green-700 rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                    <i data-lucide="file-json" class="w-5 h-5"></i>
+                    Generate JSON
+                </button>
+            </div>
+
+            <div id="result" class="hidden space-y-4">
+                <textarea 
+                    id="jsonOutput" 
+                    class="w-full h-48 p-4 rounded-xl bg-white/10 border border-white/20 text-white font-mono text-sm"
+                    readonly
+                ></textarea>
+                <button 
+                    onclick="copyToClipboard()" 
+                    class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                    <i data-lucide="copy" class="w-5 h-5"></i>
+                    Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        let cardCount = 0;
+
+        function addCard() {
+            cardCount++;
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'p-4 bg-white/5 rounded-xl border border-white/10';
+            cardDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-medium text-purple-200">Card ${cardCount}</h3>
+                    <button 
+                        onclick="this.parentElement.parentElement.remove()" 
+                        class="text-red-400 hover:text-red-300 p-1"
+                    >
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <input 
+                    type="text" 
+                    placeholder="Front (Question)" 
+                    class="w-full p-2 mb-2 rounded-lg bg-white/10 border border-white/20 text-white"
+                >
+                <input 
+                    type="text" 
+                    placeholder="Back (Answer)" 
+                    class="w-full p-2 rounded-lg bg-white/10 border border-white/20 text-white"
+                >
+            `;
+            document.getElementById('cardContainer').appendChild(cardDiv);
+            lucide.createIcons(); // Reinitialize icons for new elements
+        }
+
+        function generateJSON() {
+            const setName = document.getElementById('setName').value.trim();
+            if (!setName) {
+                alert('Please enter a set name');
+                return;
+            }
+
+            const cards = [];
+            const cardDivs = document.getElementById('cardContainer').children;
+            
+            for (let cardDiv of cardDivs) {
+                const inputs = cardDiv.getElementsByTagName('input');
+                const front = inputs[0].value.trim();
+                const back = inputs[1].value.trim();
+                
+                if (front && back) {
+                    cards.push({ front, back });
+                }
+            }
+
+            if (cards.length === 0) {
+                alert('Please add at least one card with both front and back filled');
+                return;
+            }
+
+            const flashcardSet = {
+                id: Date.now().toString(),
+                name: setName,
+                cards: cards,
+                createdAt: new Date().toISOString()
+            };
+
+            const jsonOutput = document.getElementById('jsonOutput');
+            jsonOutput.value = JSON.stringify(flashcardSet, null, 2);
+            document.getElementById('result').classList.remove('hidden');
+        }
+
+        function copyToClipboard() {
+            const jsonOutput = document.getElementById('jsonOutput');
+            jsonOutput.select();
+            document.execCommand('copy');
+            
+            // Visual feedback
+            const button = document.querySelector('#result button');
+            const originalText = button.innerHTML;
+            button.innerHTML = '<i data-lucide="check" class="w-5 h-5"></i>Copied!';
+            lucide.createIcons(); // Reinitialize icons for feedback
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                lucide.createIcons(); // Reinitialize icons after reverting
+            }, 2000);
+        }
+
+        // Add first card automatically
+        addCard();
+    </script>
+</body>
+</html> 
